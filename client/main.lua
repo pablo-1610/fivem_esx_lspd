@@ -1,4 +1,5 @@
 ESX = nil
+local pedsSpawned = false
 
 Citizen.CreateThread(function()
 	while ESX == nil do
@@ -18,6 +19,28 @@ Citizen.CreateThread(function()
 		createMarkerThread(false)
 	end
 	initializeMenus()
+	if Config.AddPeds then
+		while not pedsSpawned do
+			local playerPos = GetEntityCoords(PlayerPedId())
+			local dist = GetDistanceBetweenCoords(playerPos,vector3(441.06, -978.73, 30.68), false)
+			if dist < 50.0 then
+				for index,ped in pairs(Config.Peds) do
+					RequestModel(GetHashKey(ped.model))
+					while not HasModelLoaded(GetHashKey(ped.model)) do Citizen.Wait(10) end
+					local entity = CreatePed(9, GetHashKey(ped.model), ped.position.x, ped.position.y, ped.position.z, ped.heading, false, false)
+					TaskStartScenarioInPlace(entity, "WORLD_HUMAN_AA_COFFEE", -1, true) 
+					SetEntityInvincible(entity, true)
+					SetBlockingOfNonTemporaryEvents(entity, true)
+					Citizen.CreateThread(function()
+						Citizen.Wait(2000)
+						FreezeEntityPosition(entity, true)
+					end)
+				end
+				pedsSpawned = true
+			end
+			Citizen.Wait(1000)
+		end
+	end
 	
 end)
 
